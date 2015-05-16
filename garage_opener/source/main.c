@@ -29,12 +29,16 @@ int main(void)
     Enable_LED();
     GPIO_ResetBits(GPIOA, GPIO_Pin_9);
     GPIO_SetBits(GPIOA, GPIO_Pin_9);
+    GPIO_SetBits(GPIOA, GPIO_Pin_4);
+    //GPIO_SetBits(GPIOA, GPIO_Pin_5);
     ADC1_CH1_Config();
     TIM2_Config();
     NVIC_Config();
+    USART3_Config();
 
     int16_t data = 0;
     float32_t results = 0.0;
+    int16_t count = 0;
 
 	while(1) {
 		while (!ringbuffer_empty(&ADCData)) {
@@ -49,6 +53,11 @@ int main(void)
 		else {
 			GPIO_ResetBits(GPIOA, GPIO_Pin_9);
 			GPIO_SetBits(GPIOA, GPIO_Pin_8);
+		}
+		count++;
+		if (count > 10000) {
+		//	USART_Send(68);
+			count = 0;
 		}
 
 	}
@@ -79,7 +88,7 @@ void Enable_LED(void) {
 		 * The LEDs on the STM324F Discovery are connected to the
 		 * pins PD12 thru PD15
 		 */
-	    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
+	    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_4;
 		GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT; 		// we want the pins to be an output
 		GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz; 	// this sets the GPIO modules clock speed
 		GPIO_InitStruct.GPIO_OType = GPIO_OType_PP; 	// this sets the pin type to push / pull (as opposed to open drain)
