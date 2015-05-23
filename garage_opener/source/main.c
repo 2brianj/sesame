@@ -8,15 +8,16 @@
 
 #include "main.h"
 
-/* ----------------------------------------------------------------------
-* Declare Global variables
-* ------------------------------------------------------------------- */
+#define LED GPIO_Pin_8
+#define GARAGE_BUTTON GPIO_Pin_9
+#define COMMAND_MODE GPIO_Pin_4
 
 /* public variables */
 ringBuffer ADCData;
 
 /* Private function prototypes */
-void Enable_LED(void);
+void Enable_GPIOs(void);
+void delay(uint32_t time);
 
 int16_t average = 0;
 
@@ -26,10 +27,10 @@ int main(void)
 	ringbuffer_init(&ADCData);
 
     RCC_Config();
-    Enable_LED();
-    GPIO_ResetBits(GPIOA, GPIO_Pin_9);
-    GPIO_SetBits(GPIOA, GPIO_Pin_9);
-    GPIO_SetBits(GPIOA, GPIO_Pin_4);
+    Enable_GPIOs();
+    GPIO_ResetBits(GPIOA, GARAGE_BUTTON);
+    //GPIO_SetBits(GPIOA, GARAGE_BUTTON);
+    GPIO_SetBits(GPIOA, COMMAND_MODE);
     //GPIO_SetBits(GPIOA, GPIO_Pin_5);
     ADC1_CH1_Config();
     TIM2_Config();
@@ -39,6 +40,9 @@ int main(void)
     int16_t data = 0;
     float32_t results = 0.0;
     int16_t count = 0;
+    uint16_t USART_data = 0;
+    uint32_t packed_data = 0;
+    uint16_t open = 0;
 
 	while(1) {
 		while (!ringbuffer_empty(&ADCData)) {
@@ -47,54 +51,51 @@ int main(void)
 		}
 
 		if (results > 0.39) {
-			GPIO_SetBits(GPIOA, GPIO_Pin_9);
-			GPIO_ResetBits(GPIOA, GPIO_Pin_8);
+			GPIO_SetBits(GPIOA, GARAGE_BUTTON);
+			GPIO_ResetBits(GPIOA, LED);
 		}
 		else {
-			GPIO_ResetBits(GPIOA, GPIO_Pin_9);
-			GPIO_SetBits(GPIOA, GPIO_Pin_8);
+			GPIO_ResetBits(GPIOA, GARAGE_BUTTON);
+			GPIO_SetBits(GPIOA, LED);
 		}
-		count++;
+
 		if (count > 10000) {
 		//	USART_Send(68);
 			count = 0;
 		}
 
+		while (USART_GetFlagStatus(USART3, USART_FLAG_RXNE) == SET) {
+			USART_data = USART_Receive();
+			packed_data = (packed_data << 8) | USART_data;
+			if (packed_data == 0x4F50454E) {  // packed_data == "OPEN"
+				open = 1;
+			}
+		}
+		count++;
+
+		if (open == 1) {
+			open = 0;
+			GPIO_SetBits(GPIOA, GARAGE_BUTTON);
+			delay(20000);
+			GPIO_ResetBits(GPIOA, GARAGE_BUTTON);
+		}
+
 	}
 }
 
-void Enable_LED(void) {
+void delay(uint32_t time) {
+	uint32_t i;
+	for (i = 0; i < time; i++);
+}
+
+void Enable_GPIOs(void) {
 	GPIO_InitTypeDef GPIO_InitStruct;
-
-		/* This enables the peripheral clock to the GPIOD IO module
-		 * Every peripheral's clock has to be enabled
-		 *
-		 * The STM32F4 Discovery's User Manual and the STM32F407VGT6's
-		 * datasheet contain the information which peripheral clock has to be used.
-		 *
-		 * It is also mentioned at the beginning of the peripheral library's
-		 * source file, e.g. stm32f4xx_gpio.c
-		 */
-		//RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-
-		/* In this block of instructions all the properties
-		 * of the peripheral, the GPIO port in this case,
-		 * are filled with actual information and then
-		 * given to the Init function which takes care of
-		 * the low level stuff (setting the correct bits in the
-		 * peripheral's control register)
-		 *
-		 *
-		 * The LEDs on the STM324F Discovery are connected to the
-		 * pins PD12 thru PD15
-		 */
-	    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_4;
-		GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT; 		// we want the pins to be an output
-		GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz; 	// this sets the GPIO modules clock speed
-		GPIO_InitStruct.GPIO_OType = GPIO_OType_PP; 	// this sets the pin type to push / pull (as opposed to open drain)
-		GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL; 	// this sets the pullup / pulldown resistors to be inactive
-		GPIO_Init(GPIOA, &GPIO_InitStruct); 			// this finally passes all the values to the GPIO_Init function which takes care of setting the corresponding bits.
-
+	GPIO_InitStruct.GPIO_Pin = LED | GARAGE_BUTTON | COMMAND_MODE;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
 
