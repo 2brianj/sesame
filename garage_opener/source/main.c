@@ -8,8 +8,8 @@
 
 #include "main.h"
 
-#define LED GPIO_Pin_8
-#define GARAGE_BUTTON GPIO_Pin_9
+#define LED GPIO_Pin_9
+#define GARAGE_BUTTON GPIO_Pin_8
 #define COMMAND_MODE GPIO_Pin_4
 
 /* public variables */
@@ -76,7 +76,7 @@ int main(void)
 		if (open == 1) {
 			open = 0;
 			GPIO_SetBits(GPIOA, GARAGE_BUTTON);
-			delay(20000);
+			delay(100000);
 			GPIO_ResetBits(GPIOA, GARAGE_BUTTON);
 		}
 
