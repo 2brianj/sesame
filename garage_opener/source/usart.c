@@ -66,3 +66,7 @@ void USART_Send(uint16_t data) {
 	USART_SendData(USART3, data);
 }
 
+uint16_t USART_Receive() {
+	USART_ClearFlag(USART3, USART_FLAG_RXNE);
+	return USART_ReceiveData(USART3);
+}

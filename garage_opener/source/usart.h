@@ -16,5 +16,6 @@
 
 void USART3_Config(void);
 void USART_Send(uint16_t data);
+uint16_t USART_Receive();
 
 #endif /* USART_H_ */
