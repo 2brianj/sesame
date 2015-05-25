@@ -43,8 +43,10 @@ int main(void)
     uint16_t USART_data = 0;
     uint32_t packed_data = 0;
     uint16_t open = 0;
+    uint16_t on = 0;
 
 	while(1) {
+		/*
 		while (!ringbuffer_empty(&ADCData)) {
 			data = ringbuffer_get(&ADCData);
 			results = tandem_RT_zero_goertzel_filter(data, 50);
@@ -58,6 +60,7 @@ int main(void)
 			GPIO_ResetBits(GPIOA, GARAGE_BUTTON);
 			GPIO_SetBits(GPIOA, LED);
 		}
+		*/
 
 		if (count > 10000) {
 		//	USART_Send(68);
@@ -68,6 +71,7 @@ int main(void)
 			USART_data = USART_Receive();
 			packed_data = (packed_data << 8) | USART_data;
 			if (packed_data == 0x4F50454E) {  // packed_data == "OPEN"
+				packed_data = 0;
 				open = 1;
 			}
 		}
@@ -75,9 +79,14 @@ int main(void)
 
 		if (open == 1) {
 			open = 0;
-			GPIO_SetBits(GPIOA, GARAGE_BUTTON);
-			delay(100000);
-			GPIO_ResetBits(GPIOA, GARAGE_BUTTON);
+			if (on == 0) {
+				GPIO_SetBits(GPIOA, GARAGE_BUTTON);
+				on = 1;
+			} else {
+			//delay(100000);
+				GPIO_ResetBits(GPIOA, GARAGE_BUTTON);
+				on = 0;
+			}
 		}
 
 	}
