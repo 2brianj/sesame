@@ -45,7 +45,7 @@ uint8_t halfFlag = 0; // buffer is half full
 int32_t shiftedFilter = -10000;
 uint16_t lastSample = 0;
 
-extern ringBuffer ADCData;
+//extern ringBuffer ADCData;
 
 #define ALPHA 0.1
 #define INV_ALPHA 1-ALPHA
@@ -78,7 +78,7 @@ void TIM2_IRQHandler(void) {
         shiftedFCL = shiftedFilter + (int32_t)((sample - lastSample) << 5);
         shiftedFilter = shiftedFCL - (shiftedFCL >> 5);
         filtered_value = (shiftedFilter + 16) >> 5;
-        ringbuffer_put(&ADCData, filtered_value);
+        //ringbuffer_put(&ADCData, filtered_value);
         lastSample = sample;
 
     }
