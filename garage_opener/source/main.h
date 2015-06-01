@@ -7,3 +7,4 @@
 #include "nvic.h"
 #include "goertzel.h"
 #include "ring_buffer.h"
+#include "secret.h"	//CODE_WORD is stored here

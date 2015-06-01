@@ -11,7 +11,6 @@
 #define LED GPIO_Pin_9
 #define GARAGE_BUTTON GPIO_Pin_8
 #define COMMAND_MODE GPIO_Pin_4
-#define CODE_WORD 0x12345678
 
 /* public variables */
 //ringBuffer ADCData;
